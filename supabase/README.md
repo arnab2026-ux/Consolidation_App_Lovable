@@ -41,3 +41,29 @@ require Docker.
   built through Prompt 11 of the build pack, before migrations existed. Already
   applied to the live database; it exists to version the starting point and to
   rebuild a fresh project from scratch.
+- `20260829000100_drop_runtime_ddl_function.sql` — removes the unused Appendix A
+  runtime-DDL function.
+- `20260829000200_posting_guards.sql` — Prompt 18 item 3.
+- `20260829000300_seed_demo_dataset.sql` — Prompt 18 item 2. Creates
+  `seed_demo_dataset(p_tenant, p_reset)`; see below.
+- `20260829000400_fix_balance_carry_forward.sql` — repairs three defects that
+  stopped entity BCF from ever running.
+- `20260829000500_bcf_journal_cleanup.sql` — stops repeated BCF runs orphaning
+  empty journal headers.
+
+## Demo dataset
+
+```sql
+select seed_demo_dataset();          -- current user's tenant, wipes and rebuilds
+select seed_demo_dataset(null, false); -- keep existing rows, top up master data
+```
+
+Builds a five-entity group (USD/USD/EUR/SAR/INR) across all four consolidation
+methods, a 64-account chart, two years of trial balance, FX rates, an account
+hierarchy and one default rule of every kind. Every entity's trial balance sums
+to exactly zero in local currency, and the intercompany positions are chosen to
+produce one of every reconciliation outcome — including a deliberate 50,000 USD
+mismatch between SUB_US and JV_SA, and a one-sided balance from SUB_EU.
+
+It is destructive by default (`p_reset = true` deletes the tenant's data first),
+so it is a development and demo tool, not something to point at real data.

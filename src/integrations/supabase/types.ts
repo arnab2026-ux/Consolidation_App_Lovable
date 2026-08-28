@@ -735,6 +735,7 @@ export type Database = {
           reversed_by: string | null
           created_by: string | null
           created_at: string | null
+          entity_id: string | null
         }
         Insert: {
           id?: string
@@ -752,6 +753,7 @@ export type Database = {
           reversed_by?: string | null
           created_by?: string | null
           created_at?: string | null
+          entity_id?: string | null
         }
         Update: {
           id?: string
@@ -769,6 +771,7 @@ export type Database = {
           reversed_by?: string | null
           created_by?: string | null
           created_at?: string | null
+          entity_id?: string | null
         }
         Relationships: []
       }
@@ -1576,6 +1579,13 @@ export type Database = {
           p_year: number
         }
         Returns: number
+      }
+      seed_demo_dataset: {
+        Args: {
+          p_tenant?: string
+          p_reset?: boolean
+        }
+        Returns: Json
       }
       validate_upload_batch: {
         Args: {
