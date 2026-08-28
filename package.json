@@ -9,7 +9,11 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "db:types": "node --env-file=.env.local scripts/gen-types.mjs src/integrations/supabase/types.ts",
+    "db:apply": "node --env-file=.env.local scripts/db-apply.mjs",
+    "db:dump": "node --env-file=.env.local scripts/db-dump.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -90,6 +94,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "nitro": "3.0.260603-beta",
+    "pg": "^8.23.0",
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
