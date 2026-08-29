@@ -55,6 +55,13 @@ require Docker.
 - `20260829000700_net_income.sql` — Prompt 12. `run_net_income` wrapper,
   `run_net_income_entity` / `run_net_income_group` workers, and
   `verify_balance_sheet` for the screen's verification card.
+- `20260829000800_entity_rows_drop_group_currency.sql` — decision D1: levels
+  00/01 stop carrying `amount_gc`; the seed gains historical equity rates.
+- `20260829000900_currency_translation.sql` — Prompt 13. Posting level `05`
+  (D5), `resolve_translation_rate`, `check_fx_coverage`,
+  `run_currency_translation` and its entity worker.
+- `20260829001000_translation_coverage.sql` — decision D6: report accounts no
+  translation rule claims instead of letting the CTA absorb them.
 
 ## Demo dataset
 

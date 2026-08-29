@@ -1490,6 +1490,22 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_fx_coverage: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_cons_group: string
+        }
+        Returns: {
+            entity_code: string
+            from_currency: string
+            to_currency: string
+            rate_type: string
+            rate: number
+            is_present: boolean
+          }[]
+      }
       current_tenant_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1523,6 +1539,21 @@ export type Database = {
         Returns: {
             account_id: string
           }[]
+      }
+      resolve_translation_rate: {
+        Args: {
+          p_tenant: string
+          p_version: string
+          p_entity: string
+          p_account: string
+          p_movement: string
+          p_rate_type: string
+          p_from: string
+          p_to: string
+          p_year: number
+          p_period: number
+        }
+        Returns: number
       }
       reverse_journal: {
         Args: {
@@ -1579,6 +1610,43 @@ export type Database = {
           p_year: number
         }
         Returns: number
+      }
+      run_currency_translation: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_cons_group: string
+          p_entities?: string[]
+        }
+        Returns: {
+            task_run_id: string
+            entity_id: string
+            entity_code: string
+            entity_name: string
+            local_currency: string
+            group_currency: string
+            closing_rate: number
+            average_rate: number
+            total_lc: number
+            total_gc: number
+            cta_gc: number
+            rows_written: number
+            status: string
+            message: string
+          }[]
+      }
+      run_currency_translation_entity: {
+        Args: {
+          p_task_run_id: string
+          p_tenant: string
+          p_version: string
+          p_cons_group: string
+          p_entity: string
+          p_year: number
+          p_period: number
+        }
+        Returns: Json
       }
       run_net_income: {
         Args: {

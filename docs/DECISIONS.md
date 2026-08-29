@@ -120,3 +120,62 @@ levels 10, 20 and 30 carry their own P&L effects, and those must reach equity
 too or the consolidated balance sheet stops footing once eliminations land.
 `run_net_income_group` transfers each level's result at that same level. This is
 step 9, "Net Income (group)", of the standard close template.
+
+---
+
+## D5 — Currency translation posts at its own posting level, `05`
+
+**Date:** 2026-08-29 · **Status:** accepted · **Extends:** D1, Project Knowledge rule 4
+
+D1 settled that translation posts its own rows carrying `cons_group_id`. That
+collides with the posting-level guard: `00`/`01` are entity level and must not
+carry a group, while `10`/`20`/`30` must — but those mean IC elimination,
+consolidation of investments and group manual adjustment. A translation row is
+none of the three.
+
+Reusing one of them would make every report that slices by posting level
+misattribute where a number came from, and would break the "undo by posting
+level" story. So translation gets **`05`**: group-dependent, and entity-scoped
+within the group, sitting between reported data and consolidation entries.
+
+`posting_level` is a bare `char(2)` with no check constraint, so the only thing
+that had to change is `enforce_posting_level` / `enforce_journal_posting_level`.
+
+**Consequence for reporting (Phase 4).** The posting-level sets in Prompt 17
+must become:
+
+- Reported only → `{00}`
+- Reported + adjustments → `{00, 01}`
+- Fully consolidated → `{00, 01, 05, 10, 20, 30}`
+
+Group-currency figures only exist at `05` and above, because under D1 levels
+`00`/`01` carry `amount_gc = 0`. A group-currency report that omits `05` returns
+zero, not a wrong number — which is at least loud.
+
+---
+
+## D6 — An account no translation rule claims is reported, never absorbed
+
+**Date:** 2026-08-29 · **Status:** accepted
+
+The cumulative translation adjustment is computed as the balancing figure of
+the translated balance sheet. That makes it a sink: any account that fails to
+get translated silently disappears into the plug, and the result still foots,
+so nothing looks wrong.
+
+This is not hypothetical. The seeded rule set had no rule matching "Net income
+for the period" — a balance sheet account carried at the AVERAGE rate, so that
+it ties to the P&L result that produced it. The balance-sheet rule wanted
+`BS + CLOSING`, the P&L rule wanted `PL`, and neither claimed it. The CTA
+absorbed the whole of net income, reporting a translation adjustment of
+3,470,000 USD for a **USD entity inside a USD group**, where the right answer is
+zero.
+
+**Decision.** `run_currency_translation_entity` counts accounts that carry a
+balance in the slice but that no active rule claims, and returns them in its
+result so the run panel can show them. Accounts with `translation_method =
+'NONE'` are excluded: that is deliberate non-translation, as on the CTA account
+itself.
+
+A balancing figure must never be the only thing standing between a coverage gap
+and a plausible-looking number.
