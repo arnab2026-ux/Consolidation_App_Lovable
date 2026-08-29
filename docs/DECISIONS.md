@@ -179,3 +179,71 @@ itself.
 
 A balancing figure must never be the only thing standing between a coverage gap
 and a plausible-looking number.
+
+---
+
+## D7 — Intercompany elimination scales by consolidation method, not ownership percentage
+
+**Date:** 2026-08-29 · **Status:** accepted · **Amends:** Prompt 14 items 2 and 4
+
+Prompt 14 says to apply `cons_group_member.group_share_pct` "when either entity
+is consolidated proportionately", and to reverse both legs "up to the matched
+amount". Both need correcting.
+
+**Scaling.** Using the ownership percentage directly would be wrong for the
+ordinary case. An 80%-owned subsidiary is *fully* consolidated, with
+non-controlling interests presented separately — intercompany balances against
+it are eliminated in full, not at 80%. What decides the factor is the
+consolidation **method**:
+
+| Method | Factor | Why |
+|---|---|---|
+| `PURCHASE` | 1.0 | fully consolidated; NCI is shown separately |
+| `PROPORTIONATE` | `group_share_pct / 100` | only the group's share is in the accounts |
+| `EQUITY` | 0.0 | the investee is outside the group |
+
+A pair is eliminated at the **lower** of the two entities' factors. The equity
+case matters: a receivable from an equity-method investee is a genuine external
+receivable and must survive consolidation. That is why the seeded
+`SUB_EU -> ASSOC_IN` position is reported `ONE_SIDED` and correctly left alone,
+rather than being treated as a data-quality problem.
+
+**Difference handling.** Reversing only "up to the matched amount" leaves part
+of an intercompany balance sitting in the consolidated accounts, which defeats
+the purpose. Both legs are eliminated in full at the group's factor and the
+mismatch is posted to the rule's difference account, so the entry balances and
+no intercompany balance survives.
+
+A pair classified `DIFFERENCE` whose rule has no real-difference account is not
+eliminated at all, and is reported as blocked — silently eliminating a known
+mismatch into nowhere would be worse than leaving it visible.
+
+**FX versus real difference.** The pack asks for the exchange-driven portion to
+be split out. Without a shared transaction currency between the two legs there
+is no honest way to attribute the gap to exchange movement, so it is reported as
+a real difference rather than guessed at. The currency-difference account is
+wired up for the case where both legs do share a transaction currency.
+
+---
+
+## Sequencing note — the close order is now load-bearing
+
+Each engine reads what the previous one wrote, so the order in the standard
+close template is a correctness requirement, not a convention:
+
+```
+BCF -> Net income (entity) -> Translation -> IC reconciliation
+    -> IC elimination -> Net income (group)
+```
+
+- **Translation** reads levels 00/01, so it must follow BCF and entity net income.
+- **IC reconciliation** reads level 05, so it must follow translation. It refuses
+  to run against an untranslated slice, because comparing zeroes would report
+  everything as `MATCHED`.
+- **Net income (group)** must follow elimination: the difference booked to profit
+  and loss leaves the group balance sheet out by that amount until the group
+  result is taken to equity. Verified end to end — the group balance sheet is
+  out by exactly the 25,000 difference after elimination, and foots to zero once
+  the group net income step runs.
+
+Enforcing this is what the Consolidation Monitor (Prompt 16) is for.

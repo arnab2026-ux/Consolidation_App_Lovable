@@ -1510,6 +1510,26 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      ic_matrix: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_cons_group: string
+        }
+        Returns: {
+            entity_id: string
+            entity_code: string
+            partner_id: string
+            partner_code: string
+            rule_code: string
+            elimination_group: string
+            leg1_amount_gc: number
+            leg2_amount_gc: number
+            difference_gc: number
+            status: string
+          }[]
+      }
       match_account_condition: {
         Args: {
           a: string
@@ -1643,6 +1663,50 @@ export type Database = {
           p_version: string
           p_cons_group: string
           p_entity: string
+          p_year: number
+          p_period: number
+        }
+        Returns: Json
+      }
+      run_ic: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_cons_group: string
+          p_eliminate?: boolean
+        }
+        Returns: {
+            task_run_id: string
+            phase: string
+            pairs: number
+            matched: number
+            within_tolerance: number
+            differences: number
+            one_sided: number
+            rows_written: number
+            eliminated_gc: number
+            status: string
+            message: string
+          }[]
+      }
+      run_ic_elimination: {
+        Args: {
+          p_task_run_id: string
+          p_tenant: string
+          p_version: string
+          p_cons_group: string
+          p_year: number
+          p_period: number
+        }
+        Returns: Json
+      }
+      run_ic_reconciliation: {
+        Args: {
+          p_task_run_id: string
+          p_tenant: string
+          p_version: string
+          p_cons_group: string
           p_year: number
           p_period: number
         }

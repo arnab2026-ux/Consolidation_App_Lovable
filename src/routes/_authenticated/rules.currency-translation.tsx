@@ -11,8 +11,21 @@ import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { useMasterCodes, type CodeRow } from "@/hooks/use-master-codes";
@@ -61,7 +74,8 @@ const RATE_TYPES = ["CLOSING", "AVERAGE", "HISTORICAL", "OPENING"];
 const DIFFERENCE_SCOPES = ["BS", "PL", "EQUITY"];
 
 const TITLE = "Currency Translation | Consolidation";
-const DESCRIPTION = "Re-expression of reported balances in the group currency, and the resulting translation adjustment.";
+const DESCRIPTION =
+  "Re-expression of reported balances in the group currency, and the resulting translation adjustment.";
 
 function money(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—";
@@ -154,11 +168,16 @@ function RulesTab({ tenantId, accounts }: { tenantId: string | null; accounts: C
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
-          Rules are evaluated in sequence and the first match wins, so an account caught by two rules
-          is translated once. An account no rule claims is reported after the run rather than being
-          folded silently into the translation adjustment.
+          Rules are evaluated in sequence and the first match wins, so an account caught by two
+          rules is translated once. An account no rule claims is reported after the run rather than
+          being folded silently into the translation adjustment.
         </p>
-        <Button size="sm" className="h-8" disabled={!tenantId} onClick={() => setEditing({ row: null })}>
+        <Button
+          size="sm"
+          className="h-8"
+          disabled={!tenantId}
+          onClick={() => setEditing({ row: null })}
+        >
           <Plus className="mr-1 size-3.5" /> New rule
         </Button>
       </div>
@@ -208,7 +227,12 @@ function RulesTab({ tenantId, accounts }: { tenantId: string | null; accounts: C
                   <BoolCell value={rule.is_active} />
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => setEditing({ row: rule })}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={() => setEditing({ row: rule })}
+                  >
                     <Pencil className="size-3.5" />
                   </Button>
                 </TableCell>
@@ -226,7 +250,8 @@ function RulesTab({ tenantId, accounts }: { tenantId: string | null; accounts: C
             </SheetTitle>
             <SheetDescription className="text-xs">
               Assets and liabilities normally move to the closing rate while equity stays at its
-              historical rate. The gap that leaves in the balance sheet is the translation adjustment.
+              historical rate. The gap that leaves in the balance sheet is the translation
+              adjustment.
             </SheetDescription>
           </SheetHeader>
           {editing && (
@@ -234,7 +259,10 @@ function RulesTab({ tenantId, accounts }: { tenantId: string | null; accounts: C
               <RuleForm
                 row={editing.row}
                 tenantId={tenantId}
-                accounts={accounts.map((a) => ({ value: a.code, label: `${a.code} — ${a.name ?? ""}` }))}
+                accounts={accounts.map((a) => ({
+                  value: a.code,
+                  label: `${a.code} — ${a.name ?? ""}`,
+                }))}
                 close={() => {
                   setEditing(null);
                   void queryClient.invalidateQueries({ queryKey: ["rule_translation", tenantId] });
@@ -303,7 +331,9 @@ function RuleForm({
       };
       const { error } = row
         ? await supabase.from("rule_translation").update(payload).eq("id", row.id)
-        : await supabase.from("rule_translation").insert({ ...payload, tenant_id: tenantId as string });
+        : await supabase
+            .from("rule_translation")
+            .insert({ ...payload, tenant_id: tenantId as string });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -330,7 +360,11 @@ function RuleForm({
     <div className="flex flex-col gap-3 pt-2">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Code">
-          <Input className="h-8 text-xs" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+          <Input
+            className="h-8 text-xs"
+            value={form.code}
+            onChange={(e) => setForm({ ...form, code: e.target.value })}
+          />
         </Field>
         <Field label="Sequence" hint="Lower runs first; the first matching rule owns the account.">
           <Input
@@ -342,11 +376,19 @@ function RuleForm({
         </Field>
       </div>
       <Field label="Name">
-        <Input className="h-8 text-xs" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+        <Input
+          className="h-8 text-xs"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
       </Field>
 
       <Field label="Account filter">
-        <AccountFilterBuilder value={filter} onChange={setFilter} matchCount={preview.data ?? null} />
+        <AccountFilterBuilder
+          value={filter}
+          onChange={setFilter}
+          matchCount={preview.data ?? null}
+        />
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
@@ -391,13 +433,22 @@ function RuleForm({
       </Field>
 
       <label className="flex items-center gap-2 text-xs">
-        <Checkbox checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: Boolean(v) })} />
+        <Checkbox
+          checked={form.is_active}
+          onCheckedChange={(v) => setForm({ ...form, is_active: Boolean(v) })}
+        />
         Rule is active
       </label>
 
       <div className="flex justify-between gap-2 pt-3">
         {row ? (
-          <Button variant="outline" size="sm" className="h-8" disabled={remove.isPending} onClick={() => remove.mutate()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8"
+            disabled={remove.isPending}
+            onClick={() => remove.mutate()}
+          >
             Delete
           </Button>
         ) : (
@@ -499,9 +550,9 @@ function HistoricalRatesTab({
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
-          Rates pinned per entity and account, used by rules with rate type HISTORICAL. Equity held at
-          its acquisition rate against net assets at the closing rate is what creates the translation
-          adjustment.
+          Rates pinned per entity and account, used by rules with rate type HISTORICAL. Equity held
+          at its acquisition rate against net assets at the closing rate is what creates the
+          translation adjustment.
         </p>
         <Button size="sm" className="h-8" disabled={!tenantId} onClick={() => setAdding(true)}>
           <Plus className="mr-1 size-3.5" /> Add rate
@@ -532,9 +583,13 @@ function HistoricalRatesTab({
               <TableRow key={row.id} className="text-xs">
                 <TableCell>{label.get(row.entity_id) ?? row.entity_id}</TableCell>
                 <TableCell>{label.get(row.account_id) ?? row.account_id}</TableCell>
-                <TableCell>{row.movement_id ? (label.get(row.movement_id) ?? "—") : "All"}</TableCell>
+                <TableCell>
+                  {row.movement_id ? (label.get(row.movement_id) ?? "—") : "All"}
+                </TableCell>
                 <TableCell className="text-right tabular-nums">{rate(row.rate)}</TableCell>
-                <TableCell className="text-right tabular-nums">{row.valid_from_year ?? "—"}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {row.valid_from_year ?? "—"}
+                </TableCell>
                 <TableCell>
                   <Button
                     variant="outline"
@@ -566,21 +621,30 @@ function HistoricalRatesTab({
               <SelectField
                 value={form.entity_id}
                 onChange={(v) => setForm({ ...form, entity_id: v })}
-                options={entities.map((e) => ({ value: e.id, label: `${e.code} — ${e.name ?? ""}` }))}
+                options={entities.map((e) => ({
+                  value: e.id,
+                  label: `${e.code} — ${e.name ?? ""}`,
+                }))}
               />
             </Field>
             <Field label="Account">
               <SelectField
                 value={form.account_id}
                 onChange={(v) => setForm({ ...form, account_id: v })}
-                options={accounts.map((a) => ({ value: a.id, label: `${a.code} — ${a.name ?? ""}` }))}
+                options={accounts.map((a) => ({
+                  value: a.id,
+                  label: `${a.code} — ${a.name ?? ""}`,
+                }))}
               />
             </Field>
             <Field label="Movement type (optional)">
               <SelectField
                 value={form.movement_id}
                 onChange={(v) => setForm({ ...form, movement_id: v })}
-                options={movements.map((m) => ({ value: m.id, label: `${m.code} — ${m.name ?? ""}` }))}
+                options={movements.map((m) => ({
+                  value: m.id,
+                  label: `${m.code} — ${m.name ?? ""}`,
+                }))}
               />
             </Field>
             <div className="grid grid-cols-2 gap-3">
@@ -606,7 +670,12 @@ function HistoricalRatesTab({
               <Button variant="outline" size="sm" className="h-8" onClick={() => setAdding(false)}>
                 Cancel
               </Button>
-              <Button size="sm" className="h-8" disabled={save.isPending} onClick={() => save.mutate()}>
+              <Button
+                size="sm"
+                className="h-8"
+                disabled={save.isPending}
+                onClick={() => save.mutate()}
+              >
                 Save
               </Button>
             </div>
@@ -627,7 +696,7 @@ function RunTab({ tenantId }: { tenantId: string | null }) {
   const [results, setResults] = useState<RunResult[]>([]);
 
   const { versionId, fiscalYear, period, consGroupId } = pov;
-  const entities = master.data?.entities ?? [];
+  const entities = useMemo(() => master.data?.entities ?? [], [master.data]);
 
   const nameOf = useMemo(() => {
     const map = new Map<string, string>();
@@ -636,7 +705,14 @@ function RunTab({ tenantId }: { tenantId: string | null }) {
   }, [entities]);
 
   const runsKey = ["task_run", "TRANSLATION", tenantId, versionId, fiscalYear, period] as const;
-  const coverageKey = ["check_fx_coverage", tenantId, versionId, fiscalYear, period, consGroupId] as const;
+  const coverageKey = [
+    "check_fx_coverage",
+    tenantId,
+    versionId,
+    fiscalYear,
+    period,
+    consGroupId,
+  ] as const;
 
   // The run is blocked while any required rate is missing: a half-translated
   // group is worse than an untranslated one, because it still adds up.
@@ -678,8 +754,10 @@ function RunTab({ tenantId }: { tenantId: string | null }) {
   const run = useMutation({
     mutationFn: async () => {
       if (!versionId) throw new Error("Select a version in the point of view first");
-      if (!consGroupId) throw new Error("Translation is group dependent: select a consolidation group");
-      if (missing.length > 0) throw new Error(`${missing.length} exchange rate(s) missing — resolve them first`);
+      if (!consGroupId)
+        throw new Error("Translation is group dependent: select a consolidation group");
+      if (missing.length > 0)
+        throw new Error(`${missing.length} exchange rate(s) missing — resolve them first`);
       const { data, error } = await supabase.rpc("run_currency_translation", {
         p_version: versionId,
         p_year: fiscalYear,
@@ -721,8 +799,8 @@ function RunTab({ tenantId }: { tenantId: string | null }) {
         <div>
           <h2 className="text-sm font-semibold">Run translation</h2>
           <p className="text-xs text-muted-foreground">
-            Re-expresses {fiscalYear}/{period} reported balances in the group currency. Leave the entity
-            selection empty to translate every member of the consolidation group.
+            Re-expresses {fiscalYear}/{period} reported balances in the group currency. Leave the
+            entity selection empty to translate every member of the consolidation group.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -833,7 +911,9 @@ function RunTab({ tenantId }: { tenantId: string | null }) {
                   <TableCell className={r.status === "ERROR" ? "font-medium text-destructive" : ""}>
                     {r.status}
                   </TableCell>
-                  <TableCell className="max-w-80 text-muted-foreground">{r.message ?? "—"}</TableCell>
+                  <TableCell className="max-w-80 text-muted-foreground">
+                    {r.message ?? "—"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -869,15 +949,23 @@ function RunTab({ tenantId }: { tenantId: string | null }) {
                 <TableCell>
                   {taskRun.entity_id ? (nameOf.get(taskRun.entity_id) ?? taskRun.entity_id) : "—"}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">{taskRun.rows_written ?? 0}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {taskRun.rows_written ?? 0}
+                </TableCell>
                 <TableCell>{taskRun.status ?? "—"}</TableCell>
-                <TableCell className="max-w-72 truncate text-muted-foreground">{taskRun.message ?? "—"}</TableCell>
+                <TableCell className="max-w-72 truncate text-muted-foreground">
+                  {taskRun.message ?? "—"}
+                </TableCell>
                 <TableCell>
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs"
-                    disabled={reverse.isPending || taskRun.status === "REVERSED" || (taskRun.rows_written ?? 0) === 0}
+                    disabled={
+                      reverse.isPending ||
+                      taskRun.status === "REVERSED" ||
+                      (taskRun.rows_written ?? 0) === 0
+                    }
                     onClick={() => reverse.mutate(taskRun.id)}
                   >
                     <RotateCcw className="mr-1 size-3.5" /> Reverse

@@ -11,8 +11,21 @@ import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useAuth } from "@/hooks/use-auth";
 import { useMasterCodes } from "@/hooks/use-master-codes";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,7 +121,12 @@ function NetIncomePage() {
       title="Net Income"
       description={DESCRIPTION}
       actions={
-        <Button size="sm" className="h-8" disabled={!tenantId} onClick={() => setEditing({ row: null })}>
+        <Button
+          size="sm"
+          className="h-8"
+          disabled={!tenantId}
+          onClick={() => setEditing({ row: null })}
+        >
           <Plus className="mr-1 size-3.5" /> New rule
         </Button>
       }
@@ -156,7 +174,12 @@ function NetIncomePage() {
                   <BoolCell value={rule.is_active} />
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => setEditing({ row: rule })}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={() => setEditing({ row: rule })}
+                  >
                     <Pencil className="size-3.5" />
                   </Button>
                 </TableCell>
@@ -182,8 +205,8 @@ function NetIncomePage() {
               {editing?.row ? "Edit net income rule" : "New net income rule"}
             </SheetTitle>
             <SheetDescription className="text-xs">
-              The profit and loss result for the period is posted to a balance sheet equity account, so
-              that assets equal liabilities plus equity.
+              The profit and loss result for the period is posted to a balance sheet equity account,
+              so that assets equal liabilities plus equity.
             </SheetDescription>
           </SheetHeader>
           {editing && (
@@ -272,7 +295,9 @@ function RuleForm({
       };
       const { error } = row
         ? await supabase.from("rule_net_income").update(payload).eq("id", row.id)
-        : await supabase.from("rule_net_income").insert({ ...payload, tenant_id: tenantId as string });
+        : await supabase
+            .from("rule_net_income")
+            .insert({ ...payload, tenant_id: tenantId as string });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -299,7 +324,11 @@ function RuleForm({
     <div className="flex flex-col gap-3 pt-2">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Code">
-          <Input className="h-8 text-xs" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+          <Input
+            className="h-8 text-xs"
+            value={form.code}
+            onChange={(e) => setForm({ ...form, code: e.target.value })}
+          />
         </Field>
         <Field label="Sequence">
           <Input
@@ -311,17 +340,28 @@ function RuleForm({
         </Field>
       </div>
       <Field label="Name">
-        <Input className="h-8 text-xs" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+        <Input
+          className="h-8 text-xs"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
       </Field>
 
       <Field
         label="Source account filter"
         hint="Only profit and loss accounts are considered, in addition to this filter."
       >
-        <AccountFilterBuilder value={filter} onChange={setFilter} matchCount={preview.data ?? null} />
+        <AccountFilterBuilder
+          value={filter}
+          onChange={setFilter}
+          matchCount={preview.data ?? null}
+        />
       </Field>
 
-      <Field label="Target balance sheet account" hint="Usually the 'Net income for the period' equity account.">
+      <Field
+        label="Target balance sheet account"
+        hint="Usually the 'Net income for the period' equity account."
+      >
         <SelectField
           value={form.target_bs_account_code}
           onChange={(v) => setForm({ ...form, target_bs_account_code: v })}
@@ -329,7 +369,10 @@ function RuleForm({
         />
       </Field>
 
-      <Field label="Target movement type" hint="Applied only when the target account is movement managed.">
+      <Field
+        label="Target movement type"
+        hint="Applied only when the target account is movement managed."
+      >
         <SelectField
           value={form.target_movement_code}
           onChange={(v) => setForm({ ...form, target_movement_code: v })}
@@ -354,21 +397,30 @@ function RuleForm({
             />
           </Field>
           <p className="rounded border border-dashed px-2 py-1.5 text-[11px] text-muted-foreground">
-            The non-controlling interest split is posted by Consolidation of Investments, not by this
-            task. It is configured here for reference only — the consolidation method, ownership
-            percentage and first-consolidation handling all live with that engine, and splitting in
-            both places would double count.
+            The non-controlling interest split is posted by Consolidation of Investments, not by
+            this task. It is configured here for reference only — the consolidation method,
+            ownership percentage and first-consolidation handling all live with that engine, and
+            splitting in both places would double count.
           </p>
         </>
       )}
       <label className="flex items-center gap-2 text-xs">
-        <Checkbox checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: Boolean(v) })} />
+        <Checkbox
+          checked={form.is_active}
+          onCheckedChange={(v) => setForm({ ...form, is_active: Boolean(v) })}
+        />
         Rule is active
       </label>
 
       <div className="flex justify-between gap-2 pt-3">
         {row ? (
-          <Button variant="outline" size="sm" className="h-8" disabled={remove.isPending} onClick={() => remove.mutate()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8"
+            disabled={remove.isPending}
+            onClick={() => remove.mutate()}
+          >
             Delete
           </Button>
         ) : (
@@ -499,7 +551,8 @@ function RunPanel({
         <div>
           <h2 className="text-sm font-semibold">Run net income</h2>
           <p className="text-xs text-muted-foreground">
-            Transfers the {fiscalYear}/{period} profit and loss result into equity for the selected targets.
+            Transfers the {fiscalYear}/{period} profit and loss result into equity for the selected
+            targets.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -515,7 +568,12 @@ function RunPanel({
             selected={selectedGroups}
             onChange={setSelectedGroups}
           />
-          <Button size="sm" className="h-8" disabled={run.isPending || !versionId} onClick={() => run.mutate()}>
+          <Button
+            size="sm"
+            className="h-8"
+            disabled={run.isPending || !versionId}
+            onClick={() => run.mutate()}
+          >
             <Play className="mr-1 size-3.5" /> Run net income
           </Button>
         </div>
@@ -542,9 +600,15 @@ function RunPanel({
                     {result.target_code} — {result.target_name ?? ""}
                   </TableCell>
                   <TableCell>{result.target_kind}</TableCell>
-                  <TableCell className="text-right tabular-nums">{money(result.net_income_lc)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{money(result.net_income_gc)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{result.rows_written ?? 0}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {money(result.net_income_lc)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {money(result.net_income_gc)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {result.rows_written ?? 0}
+                  </TableCell>
                   <TableCell>{result.status}</TableCell>
                   <TableCell className="text-muted-foreground">{result.message ?? "—"}</TableCell>
                 </TableRow>
@@ -586,8 +650,12 @@ function RunPanel({
                   {entity.entity_code} — {entity.entity_name ?? ""}
                 </TableCell>
                 <TableCell>{entity.currency}</TableCell>
-                <TableCell className="text-right tabular-nums">{money(entity.total_assets)}</TableCell>
-                <TableCell className="text-right tabular-nums">{money(entity.total_liabilities_equity)}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {money(entity.total_assets)}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {money(entity.total_liabilities_equity)}
+                </TableCell>
                 <TableCell
                   className={`text-right tabular-nums ${entity.is_balanced ? "" : "font-medium text-destructive"}`}
                 >
@@ -638,16 +706,22 @@ function RunPanel({
                     {taskRun.started_at ? new Date(taskRun.started_at).toLocaleString() : "—"}
                   </TableCell>
                   <TableCell>{target ? (nameOf.get(target) ?? target) : "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{taskRun.rows_written ?? 0}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {taskRun.rows_written ?? 0}
+                  </TableCell>
                   <TableCell>{taskRun.status ?? "—"}</TableCell>
-                  <TableCell className="max-w-72 truncate text-muted-foreground">{taskRun.message ?? "—"}</TableCell>
+                  <TableCell className="max-w-72 truncate text-muted-foreground">
+                    {taskRun.message ?? "—"}
+                  </TableCell>
                   <TableCell>
                     <Button
                       variant="outline"
                       size="sm"
                       className="h-7 text-xs"
                       disabled={
-                        reverse.isPending || taskRun.status === "REVERSED" || (taskRun.rows_written ?? 0) === 0
+                        reverse.isPending ||
+                        taskRun.status === "REVERSED" ||
+                        (taskRun.rows_written ?? 0) === 0
                       }
                       onClick={() => reverse.mutate(taskRun.id)}
                     >

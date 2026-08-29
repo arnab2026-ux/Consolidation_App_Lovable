@@ -62,6 +62,8 @@ require Docker.
   `run_currency_translation` and its entity worker.
 - `20260829001000_translation_coverage.sql` — decision D6: report accounts no
   translation rule claims instead of letting the CTA absorb them.
+- `20260829001100_ic_elimination.sql` — Prompt 14. `run_ic_reconciliation`,
+  `run_ic_elimination`, the `run_ic` wrapper and `ic_matrix` for the report.
 
 ## Demo dataset
 
