@@ -75,6 +75,9 @@ require Docker.
   downstream steps; only a blocking step in ERROR does.
 - `20260829001600_seed_reset_workflow.sql` — the demo seed can reset a tenant
   that already has close runs on it.
+- `20260829001700_reporting.sql` — Prompt 17. `report_trial_balance`,
+  `report_statement` (hierarchy rollup with a comparison period),
+  `report_drilldown`, `report_audit_trail` and `report_journal_lines`.
 
 ## Demo dataset
 

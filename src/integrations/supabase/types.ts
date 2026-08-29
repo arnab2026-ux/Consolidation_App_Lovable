@@ -1551,6 +1551,132 @@ export type Database = {
         }
         Returns: Json
       }
+      report_audit_trail: {
+        Args: {
+          p_version?: string
+          p_year?: number
+          p_period?: number
+          p_doc_type?: string
+          p_posting_level?: string
+          p_limit?: number
+        }
+        Returns: {
+            journal_id: string
+            doc_number: number
+            doc_type: string
+            posting_level: string
+            fiscal_year: number
+            period: number
+            entity_code: string
+            cons_group_code: string
+            description: string
+            is_reversed: boolean
+            created_at: string
+            created_by_email: string
+            task_type: string
+            task_status: string
+            line_count: number
+            total_lc: number
+            total_gc: number
+          }[]
+      }
+      report_drilldown: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_levels?: string[]
+          p_cons_group?: string
+          p_account_code?: string
+          p_entity_id?: string
+        }
+        Returns: {
+            fact_id: number
+            posting_level: string
+            entity_code: string
+            account_code: string
+            account_name: string
+            movement_code: string
+            partner_code: string
+            amount_lc: number
+            amount_gc: number
+            source_task: string
+            doc_number: number
+            doc_type: string
+            description: string
+            task_type: string
+            task_status: string
+            created_at: string
+            created_by_email: string
+          }[]
+      }
+      report_journal_lines: {
+        Args: {
+          p_journal_id: string
+        }
+        Returns: {
+            fact_id: number
+            entity_code: string
+            account_code: string
+            account_name: string
+            movement_code: string
+            partner_code: string
+            posting_level: string
+            amount_lc: number
+            amount_gc: number
+          }[]
+      }
+      report_statement: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_hierarchy_code?: string
+          p_levels?: string[]
+          p_cons_group?: string
+          p_entities?: string[]
+          p_compare_year?: number
+          p_compare_period?: number
+        }
+        Returns: {
+            node_code: string
+            node_name: string
+            parent_code: string
+            node_order: number
+            is_leaf: boolean
+            depth: number
+            amount_lc: number
+            amount_gc: number
+            compare_lc: number
+            compare_gc: number
+          }[]
+      }
+      report_trial_balance: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_levels?: string[]
+          p_cons_group?: string
+          p_entities?: string[]
+        }
+        Returns: {
+            entity_id: string
+            entity_code: string
+            entity_name: string
+            local_currency: string
+            account_id: string
+            account_code: string
+            account_name: string
+            statement_type: string
+            account_class: string
+            movement_code: string
+            movement_name: string
+            posting_level: string
+            amount_lc: number
+            amount_gc: number
+          }[]
+      }
       resolve_account_filter: {
         Args: {
           p_tenant: string
