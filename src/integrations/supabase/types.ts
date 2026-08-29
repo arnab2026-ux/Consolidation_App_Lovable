@@ -1794,12 +1794,32 @@ export type Database = {
         }
         Returns: Json
       }
+      run_workflow_task: {
+        Args: {
+          p_task_run_id: string
+        }
+        Returns: Json
+      }
       seed_demo_dataset: {
         Args: {
           p_tenant?: string
           p_reset?: boolean
         }
         Returns: Json
+      }
+      seed_standard_workflow_template: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      start_workflow_run: {
+        Args: {
+          p_template: string
+          p_version: string
+          p_year: number
+          p_period: number
+          p_cons_group: string
+        }
+        Returns: string
       }
       validate_upload_batch: {
         Args: {
@@ -1824,6 +1844,37 @@ export type Database = {
             total_liabilities_equity: number
             difference: number
             is_balanced: boolean
+          }[]
+      }
+      workflow_deps_met: {
+        Args: {
+          p_task_run_id: string
+        }
+        Returns: boolean
+      }
+      workflow_monitor: {
+        Args: {
+          p_workflow_run_id: string
+        }
+        Returns: {
+            step_id: string
+            step_no: number
+            step_name: string
+            task_type: string
+            scope: string
+            is_blocking: boolean
+            requires_approval: boolean
+            unit_kind: string
+            unit_id: string
+            unit_code: string
+            unit_name: string
+            task_run_id: string
+            status: string
+            rows_written: number
+            message: string
+            started_at: string
+            finished_at: string
+            deps_met: boolean
           }[]
       }
     }

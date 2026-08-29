@@ -68,6 +68,13 @@ require Docker.
   covering the purchase, proportionate and equity methods, and `run_coi`.
 - `20260829001300_coi_scoped_cleanup.sql` — scopes the COI re-run cleanup to its
   own document; scoping by entity wiped rows posted against a shared investor.
+- `20260829001400_workflow_orchestration.sql` — Prompt 16. The standard close
+  template, `start_workflow_run`, `workflow_deps_met`, `run_workflow_task` and
+  `workflow_monitor`.
+- `20260829001500_workflow_dep_semantics.sql` — a WARNING no longer blocks
+  downstream steps; only a blocking step in ERROR does.
+- `20260829001600_seed_reset_workflow.sql` — the demo seed can reset a tenant
+  that already has close runs on it.
 
 ## Demo dataset
 

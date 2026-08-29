@@ -49,7 +49,7 @@ translation engine.
 
 ## D2 — Workflow orchestration runs as RPC + client driver, not an Edge Function
 
-**Date:** 2026-08-29 · **Status:** proposed · **Amends:** Prompt 16
+**Date:** 2026-08-29 · **Status:** accepted (implemented Phase 3) · **Amends:** Prompt 16
 
 Prompt 16 specified an Edge Function `run-workflow` to resolve the dependency
 graph and call each RPC in turn.
@@ -312,3 +312,29 @@ To finish them: run `run_bcf_group` for the consolidation group so level-20
 goodwill and NCI roll into the new year, add register rows carrying the
 disposal proceeds and the ownership change, then derecognise the proportion
 disposed of and post the difference against proceeds to profit and loss.
+
+---
+
+## D10 — A warning does not stop a close
+
+**Date:** 2026-08-29 · **Status:** accepted
+
+The first version of `workflow_deps_met` required an upstream task to be
+`SUCCESS`. That stalled the close at its first warning: intercompany
+reconciliation finishing `WARNING` because a pair is genuinely out of balance is
+the step working correctly — reporting the difference is the entire point of it —
+and it must not block elimination.
+
+Prompt 16 already states the rule; the implementation just did not follow it.
+A dependency counts as satisfied when the upstream task is:
+
+| Upstream status | Satisfied? |
+|---|---|
+| `SUCCESS`, `WARNING` | yes |
+| `ERROR` on a **non-blocking** step | yes — continue, carrying the warning |
+| `ERROR` on a **blocking** step | no |
+| `PENDING`, `RUNNING` | no — not finished |
+| `REVERSED` | no — the work was undone |
+
+Only caught by driving a whole close end to end. Steps 1 to 6 ran, and
+everything from 7 onward sat `PENDING` with no error to explain why.
