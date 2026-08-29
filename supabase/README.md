@@ -64,6 +64,10 @@ require Docker.
   translation rule claims instead of letting the CTA absorb them.
 - `20260829001100_ic_elimination.sql` — Prompt 14. `run_ic_reconciliation`,
   `run_ic_elimination`, the `run_ic` wrapper and `ic_matrix` for the report.
+- `20260829001200_consolidation_of_investments.sql` — Prompt 15. `run_coi_entity`
+  covering the purchase, proportionate and equity methods, and `run_coi`.
+- `20260829001300_coi_scoped_cleanup.sql` — scopes the COI re-run cleanup to its
+  own document; scoping by entity wiped rows posted against a shared investor.
 
 ## Demo dataset
 

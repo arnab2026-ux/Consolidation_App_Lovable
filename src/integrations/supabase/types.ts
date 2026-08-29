@@ -1631,6 +1631,45 @@ export type Database = {
         }
         Returns: number
       }
+      run_coi: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_cons_group: string
+          p_entities?: string[]
+        }
+        Returns: {
+            task_run_id: string
+            investee_id: string
+            investee_code: string
+            investee_name: string
+            cons_method: string
+            group_share_pct: number
+            net_assets_gc: number
+            investment_gc: number
+            goodwill_gc: number
+            nci_equity_gc: number
+            nci_pl_gc: number
+            equity_pickup_gc: number
+            residual_gc: number
+            rows_written: number
+            status: string
+            message: string
+          }[]
+      }
+      run_coi_entity: {
+        Args: {
+          p_task_run_id: string
+          p_tenant: string
+          p_version: string
+          p_cons_group: string
+          p_investee: string
+          p_year: number
+          p_period: number
+        }
+        Returns: Json
+      }
       run_currency_translation: {
         Args: {
           p_version: string

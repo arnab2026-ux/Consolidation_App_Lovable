@@ -247,3 +247,68 @@ BCF -> Net income (entity) -> Translation -> IC reconciliation
   the group net income step runs.
 
 Enforcing this is what the Consolidation Monitor (Prompt 16) is for.
+
+---
+
+## D8 — Non-controlling interests are posted on the balance sheet; the profit split is presentation
+
+**Date:** 2026-08-29 · **Status:** accepted · **Refines:** D4, Prompt 15
+
+D4 gave the NCI split to consolidation of investments. Implementing it exposed a
+double count. The equity elimination already credits NCI with the minority share
+of the investee's **net assets**, and net assets include the current period's
+result. Posting a further `Dr NCI share of profit / Cr NCI equity` would credit
+the minority with its share of the result twice.
+
+**Decision.** The elimination entry credits NCI equity with the minority share
+of net assets, in full, on the balance sheet. The profit attributable to
+non-controlling interests is **computed and reported** — returned by the engine,
+shown on the run screen, and available to the statements — but not posted as a
+separate journal. `rule_coi.nci_pl_account_code` names the line the reports use.
+
+Splitting the result between owners and non-controlling interests is a
+presentation of the same equity, not a further movement of it. A journal that
+nets to nothing is worse than no journal: it implies a transaction happened.
+
+---
+
+## D9 — Scaling or reversing an entity's translated data leaves the net-income account alone
+
+**Date:** 2026-08-29 · **Status:** accepted
+
+Every posting at levels 10/20/30 must sum to zero across all its lines, balance
+sheet and profit and loss together. Group net income then transfers the level's
+P&L into equity and the group balance sheet foots. That invariant is what makes
+the whole chain closeable.
+
+It has one non-obvious consequence. A translated entity's rows are **not** a
+balanced set: its balance sheet foots to zero *including* its net-income equity
+line, while its P&L still carries the result. So reversing all of an entity's
+translated rows — as the equity method must, and as proportionate scaling does
+in part — leaves an entry out by exactly that result.
+
+**Decision.** When consolidation of investments scales or reverses an entity's
+translated data, rows on the account flagged `is_net_income` are excluded. The
+reversal then balances, and group net income re-creates the line at level 20.
+Same answer, without an unbalanced journal.
+
+Verified: with this rule the group balance sheet foots to 0.00 at level 05,
+level 10, level 20 and in total, and the consolidated result of 5,277,480 USD is
+independently derivable — the three fully consolidated entities in full, the
+joint venture at 50%, the associate at 30%, less the 25,000 intercompany
+difference, plus the 700,000 bargain purchase gain on SUB_US.
+
+---
+
+## Not implemented in Prompt 15
+
+`PARTIAL_DISPOSAL`, `TOTAL_DISPOSAL` and `STEP_ACQUISITION` raise an explicit
+error rather than posting something plausible. They need prior-period goodwill
+and non-controlling interests carried forward by a group balance carry forward,
+and disposal-specific test data, neither of which exists yet. Refusing is
+better than a silently wrong gain on disposal.
+
+To finish them: run `run_bcf_group` for the consolidation group so level-20
+goodwill and NCI roll into the new year, add register rows carrying the
+disposal proceeds and the ownership change, then derecognise the proportion
+disposed of and post the difference against proceeds to profit and loss.
