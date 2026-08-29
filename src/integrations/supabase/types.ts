@@ -1580,6 +1580,49 @@ export type Database = {
         }
         Returns: number
       }
+      run_net_income: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_entities?: string[]
+          p_groups?: string[]
+        }
+        Returns: {
+            task_run_id: string
+            target_kind: string
+            target_id: string
+            target_code: string
+            target_name: string
+            net_income_lc: number
+            net_income_gc: number
+            rows_written: number
+            status: string
+            message: string
+          }[]
+      }
+      run_net_income_entity: {
+        Args: {
+          p_task_run_id: string
+          p_tenant: string
+          p_version: string
+          p_entity: string
+          p_year: number
+          p_period: number
+        }
+        Returns: Json
+      }
+      run_net_income_group: {
+        Args: {
+          p_task_run_id: string
+          p_tenant: string
+          p_version: string
+          p_cons_group: string
+          p_year: number
+          p_period: number
+        }
+        Returns: Json
+      }
       seed_demo_dataset: {
         Args: {
           p_tenant?: string
@@ -1592,6 +1635,25 @@ export type Database = {
           p_batch_id: string
         }
         Returns: Json
+      }
+      verify_balance_sheet: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_cons_group?: string
+          p_posting_levels?: string[]
+        }
+        Returns: {
+            entity_id: string
+            entity_code: string
+            entity_name: string
+            currency: string
+            total_assets: number
+            total_liabilities_equity: number
+            difference: number
+            is_balanced: boolean
+          }[]
       }
     }
     Enums: {

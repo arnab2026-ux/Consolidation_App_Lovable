@@ -61,3 +61,62 @@ Monitor for free, with no deploy pipeline and no second copy of the dependency
 rules.
 
 Move to an Edge Function only if a group-scope run exceeds the request timeout.
+
+---
+
+## D3 — Balances and P&L are both year-to-date as at the stated period
+
+**Date:** 2026-08-29 · **Status:** accepted
+
+The pack never states whether `fact_balances` holds periodic or cumulative
+figures, and the two engines written before this point disagreed with each
+other.
+
+`validate_upload_batch` requires each uploaded period's trial balance to sum to
+zero per entity. That can only hold if the balance sheet and the P&L are on the
+same basis — a year-to-date balance sheet against a periodic P&L balances only
+in period 1. So the model is **year-to-date on both**: a row for period *p* is
+the position as at the end of period *p*, and period 12 already carries the full
+year.
+
+**Consequences.**
+
+- An engine reading a year's result reads **one period**, never a sum across
+  periods. `run_net_income` does this.
+- Prior-year closing is the **highest period carrying data**, not the sum of
+  every period. `run_bcf_entity` / `run_bcf_group` were summing all periods,
+  which is correct by accident while each year holds a single period and a 12x
+  overstatement the moment monthly data is loaded. Fixed in
+  `20260829000600_bcf_ytd_period_model.sql`.
+
+If periodic storage is ever wanted, it should arrive as an explicit column or
+version attribute rather than by convention, and every engine revisited.
+
+---
+
+## D4 — The NCI profit split belongs to consolidation of investments, not net income
+
+**Date:** 2026-08-29 · **Status:** accepted · **Resolves:** Prompt 12 item 4 vs Prompt 15
+
+Prompt 12 item 4 says net income should split the result by
+`group_share_pct` and post the minority share at posting level 20. Prompt 15
+says consolidation of investments should post "minority share of net income to
+`nci_pl_account_code`". Implementing both would double count non-controlling
+interests.
+
+**Decision.** Consolidation of investments owns it. That engine already knows
+the consolidation method (only `PURCHASE` recognises NCI at all — proportionate
+recognises none, equity excludes the investee entirely), holds both the equity
+and P&L NCI accounts, and handles first versus subsequent consolidation and
+disposals. `rule_net_income` has only `minority_account_code`, one account,
+which cannot express a two-sided posting.
+
+`rule_net_income.split_to_minority` and `minority_account_code` are kept and
+still editable, but `run_net_income_*` does not act on them. The rule editor
+says so in the form rather than silently ignoring the setting.
+
+**What net income does at group level instead:** consolidation postings at
+levels 10, 20 and 30 carry their own P&L effects, and those must reach equity
+too or the consolidated balance sheet stops footing once eliminations land.
+`run_net_income_group` transfers each level's result at that same level. This is
+step 9, "Net Income (group)", of the standard close template.

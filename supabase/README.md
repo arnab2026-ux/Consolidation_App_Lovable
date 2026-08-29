@@ -50,6 +50,11 @@ require Docker.
   stopped entity BCF from ever running.
 - `20260829000500_bcf_journal_cleanup.sql` — stops repeated BCF runs orphaning
   empty journal headers.
+- `20260829000600_bcf_ytd_period_model.sql` — makes BCF read the prior year's
+  closing period instead of summing every period (decision D3).
+- `20260829000700_net_income.sql` — Prompt 12. `run_net_income` wrapper,
+  `run_net_income_entity` / `run_net_income_group` workers, and
+  `verify_balance_sheet` for the screen's verification card.
 
 ## Demo dataset
 
