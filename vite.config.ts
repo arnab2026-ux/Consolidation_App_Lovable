@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // The Lovable config defaults Nitro to `cloudflare-module`, which does not run
+  // on Vercel. Vercel sets VERCEL=1 during its builds, so pin the preset there
+  // and leave every other build - local, and Lovable's own - on the default.
+  ...(process.env["VERCEL"] ? { nitro: { preset: "vercel" as const } } : {}),
 });
