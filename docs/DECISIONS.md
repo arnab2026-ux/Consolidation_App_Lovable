@@ -338,3 +338,61 @@ A dependency counts as satisfied when the upstream task is:
 
 Only caught by driving a whole close end to end. Steps 1 to 6 ran, and
 everything from 7 onward sat `PENDING` with no error to explain why.
+
+---
+
+## D11 — A validation rule has to know where in the close it applies
+
+**Date:** 2026-08-29 · **Status:** accepted · **Amends:** Prompt 18 item 1
+
+Prompt 18 lists the seed validations in one flat set — "balance sheet balances
+to zero", "net income in BS equals P&L total", "IC accounts must have a
+partner", and so on — as though all of them could be evaluated at the same
+moment. They cannot, and seeding them that way blocked a completely correct
+close at step 2 with two findings that were both true and both meaningless:
+
+```
+Balance sheet is out by 3470000.00              (PARENT)
+Net income in equity 0.00 does not tie to ...   (PARENT)
+```
+
+Net income is transferred to equity at step 4. Before that, the balance sheet
+is *supposed* to be out by exactly the result, and the equity line is
+*supposed* to be zero. The invariant that does hold on reported data is the one
+the upload screen already checks: the whole trial balance, balance sheet and
+P&L together, nets to zero.
+
+**Decision.** `validation_rule.stage` says when a rule is meaningful:
+
+| Stage | When | Rules |
+|---|---|---|
+| `REPORTED` | uploaded data, before any engine | trial balance nets to zero, partner/movement dimension checks, ownership range, FX coverage |
+| `POST_NET_INCOME` | after the result reaches equity | balance sheet balances, net income ties to P&L |
+| `CONSOLIDATED` | after elimination and investments | consolidated balance sheet balances, **group wide** |
+
+The workflow's validation step runs the `REPORTED` stage only.
+
+**And the consolidated check is group-wide, not per entity.** A consolidated
+balance sheet does not foot per entity and is not meant to — consolidation of
+investments deliberately moves equity between them, eliminating an investee's
+equity against the investor's carrying amount and recognising goodwill against
+one entity and non-controlling interests against another. Checking per entity
+reported five failures on a correct close.
+
+---
+
+## Note — the totals refresh cannot be concurrent
+
+`REFRESH MATERIALIZED VIEW CONCURRENTLY` is not permitted inside a transaction
+block, and a plpgsql function is always inside one, as is every PostgREST
+request. So the concurrent path could never be taken from either the close or
+the API. `refresh_cons_totals()` is now plain, non-concurrent refresh.
+
+That is acceptable here: `mv_cons_totals` is read only by the statement rollup,
+refreshed once at the end of a close, and small — one row per reporting
+coordinate rather than per posting. The unique index is kept, because an
+out-of-transaction refresh (a scheduled job) would need it.
+
+`mv_cons_totals` is also stale by design between closes, so nothing that must be
+exact reads it: the trial balance, drill-through and audit trail all still go to
+`fact_balances`.

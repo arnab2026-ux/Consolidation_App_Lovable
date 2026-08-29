@@ -415,6 +415,79 @@ function DataModelWizard() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <DemoDatasetCard />
     </PageShell>
+  );
+}
+
+/**
+ * Prompt 18 asks for an admin-only "Load demo dataset" action. It is
+ * destructive by design - it clears the tenant's transactional and master data
+ * before rebuilding - so it is gated on the admin role and asks for a typed
+ * confirmation rather than sitting behind a single click.
+ */
+function DemoDatasetCard() {
+  const { appUser } = useAuth();
+  const queryClient = useQueryClient();
+  const [confirm, setConfirm] = useState("");
+
+  const isAdmin = appUser?.role === "admin";
+
+  const load = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc("seed_demo_dataset", { p_reset: true });
+      if (error) throw error;
+      return data as unknown as { entities?: number; accounts?: number; fact_rows?: number };
+    },
+    onSuccess: async (result) => {
+      setConfirm("");
+      toast.success(
+        `Demo dataset loaded: ${result?.entities ?? 0} entities, ${result?.accounts ?? 0} accounts, ${result?.fact_rows ?? 0} balances`,
+      );
+      await queryClient.invalidateQueries();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  if (!isAdmin) return null;
+
+  return (
+    <div className="rounded border border-dashed p-4">
+      <h2 className="text-sm font-semibold">Demo dataset</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Builds a five-entity group across USD, EUR, SAR and INR covering all four consolidation
+        methods, with two years of trial balance, exchange rates, an account hierarchy, default
+        rules and validations. Intercompany positions are chosen to produce one of every
+        reconciliation outcome, including a deliberate mismatch.
+      </p>
+      <p className="mt-2 text-xs text-destructive">
+        This deletes every entity, account, balance and close run in this workspace first. Type
+        REPLACE below to confirm.
+      </p>
+      <div className="mt-3 flex items-center gap-2">
+        <Input
+          className="h-8 w-40 text-xs"
+          placeholder="REPLACE"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8"
+          disabled={confirm !== "REPLACE" || load.isPending}
+          onClick={() => load.mutate()}
+        >
+          {load.isPending ? (
+            <>
+              <Loader2 className="mr-1 size-3.5 animate-spin" /> Loading…
+            </>
+          ) : (
+            "Replace with demo dataset"
+          )}
+        </Button>
+      </div>
+    </div>
   );
 }

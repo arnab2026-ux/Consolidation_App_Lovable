@@ -78,6 +78,19 @@ require Docker.
 - `20260829001700_reporting.sql` — Prompt 17. `report_trial_balance`,
   `report_statement` (hierarchy rollup with a comparison period),
   `report_drilldown`, `report_audit_trail` and `report_journal_lines`.
+- `20260829001800_validation_rules.sql` — Prompt 18 item 1. `validation_rule`
+  and `run_validations`.
+- `20260829001900_workflow_runs_validations.sql` — the close's validation step
+  runs the rule set and keeps findings on `task_run.log`.
+- `20260829002000_mv_cons_totals.sql` — Prompt 18 item 4. Pre-aggregated
+  statement slice plus `refresh_cons_totals` and `report_cons_totals`.
+- `20260829002100_workflow_refreshes_totals.sql` — the close refreshes it.
+- `20260829002200_validation_stages.sql` — decision D11: rules carry the stage
+  at which they are meaningful.
+- `20260829002300_validation_fixes.sql` — drops an ambiguous overload; the
+  consolidated balance check goes group-wide.
+- `20260829002400_refresh_not_concurrent.sql` — concurrent refresh is not
+  possible inside a transaction.
 
 ## Demo dataset
 

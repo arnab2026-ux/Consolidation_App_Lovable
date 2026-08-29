@@ -50,6 +50,17 @@ interface MonitorCell {
   deps_met: boolean;
 }
 
+interface ValidationFinding {
+  rule_code: string;
+  rule_name: string;
+  severity: string;
+  is_blocking: boolean;
+  entity_code: string | null;
+  account_code: string | null;
+  detail: string;
+  amount: number | null;
+}
+
 const TITLE = "Consolidation Monitor | Consolidation";
 const DESCRIPTION = "Every close step against every consolidation unit, and what still has to run.";
 
@@ -224,6 +235,23 @@ function MonitorPage() {
     },
     [runId, refresh],
   );
+
+  // The validation step keeps its findings on task_run.log, so the drawer can
+  // say what actually failed instead of just "ERROR".
+  const findings = useQuery({
+    queryKey: ["task_run_log", detail?.task_run_id],
+    enabled: Boolean(detail && detail.task_type === "VALIDATION"),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("task_run")
+        .select("log")
+        .eq("id", detail?.task_run_id as string)
+        .maybeSingle();
+      if (error) throw error;
+      const raw = data?.log;
+      return Array.isArray(raw) ? (raw as unknown as ValidationFinding[]) : [];
+    },
+  });
 
   const reverse = useMutation({
     mutationFn: async (taskRunId: string) => {
@@ -453,6 +481,39 @@ function MonitorPage() {
 
               {detail.message && (
                 <p className="rounded border bg-muted/30 p-2 text-[11px]">{detail.message}</p>
+              )}
+
+              {detail.task_type === "VALIDATION" && (findings.data ?? []).length > 0 && (
+                <div className="rounded border">
+                  <div className="border-b px-2 py-1.5 text-[11px] font-semibold">
+                    Validation findings
+                  </div>
+                  <ul className="divide-y">
+                    {(findings.data ?? []).map((f, i) => (
+                      <li key={`${f.rule_code}-${i}`} className="px-2 py-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <span
+                            className={
+                              f.severity === "ERROR"
+                                ? "text-destructive"
+                                : "text-amber-600 dark:text-amber-400"
+                            }
+                          >
+                            {f.detail}
+                          </span>
+                          <span className="shrink-0 text-[10px] text-muted-foreground">
+                            {f.rule_code}
+                          </span>
+                        </div>
+                        {(f.entity_code || f.account_code) && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {[f.entity_code, f.account_code].filter(Boolean).join(" · ")}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
 
               <div className="flex justify-between gap-2 pt-2">

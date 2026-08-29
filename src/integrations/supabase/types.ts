@@ -1309,6 +1309,51 @@ export type Database = {
         }
         Relationships: []
       }
+      validation_rule: {
+        Row: {
+          id: string
+          tenant_id: string
+          code: string
+          name: string
+          rule_type: string
+          expression: Json
+          severity: string
+          is_blocking: boolean
+          sequence: number | null
+          is_active: boolean | null
+          created_at: string | null
+          stage: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          code: string
+          name: string
+          rule_type: string
+          expression?: Json
+          severity?: string
+          is_blocking?: boolean
+          sequence?: number | null
+          is_active?: boolean | null
+          created_at?: string | null
+          stage?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          code?: string
+          name?: string
+          rule_type?: string
+          expression?: Json
+          severity?: string
+          is_blocking?: boolean
+          sequence?: number | null
+          is_active?: boolean | null
+          created_at?: string | null
+          stage?: string
+        }
+        Relationships: []
+      }
       workflow_run: {
         Row: {
           id: string
@@ -1419,6 +1464,22 @@ export type Database = {
       }
     }
     Views: {
+      mv_cons_totals: {
+        Row: {
+          tenant_id: string | null
+          cons_group_id: string | null
+          version_id: string | null
+          fiscal_year: number | null
+          period: number | null
+          posting_level: string | null
+          account_id: string | null
+          entity_id: string | null
+          amount_lc: number | null
+          amount_gc: number | null
+          line_count: number | null
+        }
+        Relationships: []
+      }
       v_fact_browser: {
         Row: {
           id: number | null
@@ -1551,6 +1612,10 @@ export type Database = {
         }
         Returns: Json
       }
+      refresh_cons_totals: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       report_audit_trail: {
         Args: {
           p_version?: string
@@ -1578,6 +1643,25 @@ export type Database = {
             line_count: number
             total_lc: number
             total_gc: number
+          }[]
+      }
+      report_cons_totals: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_levels?: string[]
+          p_cons_group?: string
+        }
+        Returns: {
+            account_code: string
+            account_name: string
+            statement_type: string
+            account_class: string
+            entity_code: string
+            posting_level: string
+            amount_lc: number
+            amount_gc: number
           }[]
       }
       report_drilldown: {
@@ -1920,9 +2004,44 @@ export type Database = {
         }
         Returns: Json
       }
+      run_validations: {
+        Args: {
+          p_version: string
+          p_year: number
+          p_period: number
+          p_levels?: string[]
+          p_cons_group?: string
+          p_entity?: string
+        }
+        Returns: {
+            rule_code: string
+            rule_name: string
+            rule_type: string
+            severity: string
+            is_blocking: boolean
+            entity_code: string
+            account_code: string
+            detail: string
+            amount: number
+          }[]
+      }
       run_workflow_task: {
         Args: {
           p_task_run_id: string
+        }
+        Returns: Json
+      }
+      run_workflow_validation: {
+        Args: {
+          p_task_run_id: string
+          p_tenant: string
+          p_version: string
+          p_entity: string
+          p_cons_group: string
+          p_year: number
+          p_period: number
+          p_stage?: string
+          p_levels?: string[]
         }
         Returns: Json
       }
@@ -1936,6 +2055,10 @@ export type Database = {
       seed_standard_workflow_template: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      seed_validation_rules: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       start_workflow_run: {
         Args: {
