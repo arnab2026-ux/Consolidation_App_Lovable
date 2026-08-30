@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as AuthenticatedChangePasswordRouteImport } from './routes/_authenticated/change-password'
 import { Route as AuthenticatedDataBrowserRouteImport } from './routes/_authenticated/data.browser'
 import { Route as AuthenticatedDataJournalsRouteImport } from './routes/_authenticated/data.journals'
 import { Route as AuthenticatedDataUploadRouteImport } from './routes/_authenticated/data.upload'
@@ -33,6 +34,7 @@ import { Route as AuthenticatedSetupDataModelRouteImport } from './routes/_authe
 import { Route as AuthenticatedSetupDimensionsRouteImport } from './routes/_authenticated/setup.dimensions'
 import { Route as AuthenticatedSetupFxRatesRouteImport } from './routes/_authenticated/setup.fx-rates'
 import { Route as AuthenticatedSetupHierarchiesRouteImport } from './routes/_authenticated/setup.hierarchies'
+import { Route as AuthenticatedSetupUsersRouteImport } from './routes/_authenticated/setup.users'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,6 +55,12 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedChangePasswordRoute =
+  AuthenticatedChangePasswordRouteImport.update({
+    id: '/change-password',
+    path: '/change-password',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDataBrowserRoute =
   AuthenticatedDataBrowserRouteImport.update({
     id: '/data/browser',
@@ -172,11 +180,17 @@ const AuthenticatedSetupHierarchiesRoute =
     path: '/setup/hierarchies',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSetupUsersRoute = AuthenticatedSetupUsersRouteImport.update({
+  id: '/setup/users',
+  path: '/setup/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/change-password': typeof AuthenticatedChangePasswordRoute
   '/data/browser': typeof AuthenticatedDataBrowserRoute
   '/data/journals': typeof AuthenticatedDataJournalsRoute
   '/data/upload': typeof AuthenticatedDataUploadRoute
@@ -197,11 +211,13 @@ export interface FileRoutesByFullPath {
   '/setup/dimensions': typeof AuthenticatedSetupDimensionsRoute
   '/setup/fx-rates': typeof AuthenticatedSetupFxRatesRoute
   '/setup/hierarchies': typeof AuthenticatedSetupHierarchiesRoute
+  '/setup/users': typeof AuthenticatedSetupUsersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/change-password': typeof AuthenticatedChangePasswordRoute
   '/data/browser': typeof AuthenticatedDataBrowserRoute
   '/data/journals': typeof AuthenticatedDataJournalsRoute
   '/data/upload': typeof AuthenticatedDataUploadRoute
@@ -222,6 +238,7 @@ export interface FileRoutesByTo {
   '/setup/dimensions': typeof AuthenticatedSetupDimensionsRoute
   '/setup/fx-rates': typeof AuthenticatedSetupFxRatesRoute
   '/setup/hierarchies': typeof AuthenticatedSetupHierarchiesRoute
+  '/setup/users': typeof AuthenticatedSetupUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -229,6 +246,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/_authenticated/change-password': typeof AuthenticatedChangePasswordRoute
   '/_authenticated/data/browser': typeof AuthenticatedDataBrowserRoute
   '/_authenticated/data/journals': typeof AuthenticatedDataJournalsRoute
   '/_authenticated/data/upload': typeof AuthenticatedDataUploadRoute
@@ -249,6 +267,7 @@ export interface FileRoutesById {
   '/_authenticated/setup/dimensions': typeof AuthenticatedSetupDimensionsRoute
   '/_authenticated/setup/fx-rates': typeof AuthenticatedSetupFxRatesRoute
   '/_authenticated/setup/hierarchies': typeof AuthenticatedSetupHierarchiesRoute
+  '/_authenticated/setup/users': typeof AuthenticatedSetupUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -256,6 +275,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/change-password'
     | '/data/browser'
     | '/data/journals'
     | '/data/upload'
@@ -276,11 +296,13 @@ export interface FileRouteTypes {
     | '/setup/dimensions'
     | '/setup/fx-rates'
     | '/setup/hierarchies'
+    | '/setup/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/signup'
+    | '/change-password'
     | '/data/browser'
     | '/data/journals'
     | '/data/upload'
@@ -301,12 +323,14 @@ export interface FileRouteTypes {
     | '/setup/dimensions'
     | '/setup/fx-rates'
     | '/setup/hierarchies'
+    | '/setup/users'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/login'
     | '/signup'
+    | '/_authenticated/change-password'
     | '/_authenticated/data/browser'
     | '/_authenticated/data/journals'
     | '/_authenticated/data/upload'
@@ -327,6 +351,7 @@ export interface FileRouteTypes {
     | '/_authenticated/setup/dimensions'
     | '/_authenticated/setup/fx-rates'
     | '/_authenticated/setup/hierarchies'
+    | '/_authenticated/setup/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -365,6 +390,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/change-password': {
+      id: '/_authenticated/change-password'
+      path: '/change-password'
+      fullPath: '/change-password'
+      preLoaderRoute: typeof AuthenticatedChangePasswordRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/data/browser': {
       id: '/_authenticated/data/browser'
@@ -506,10 +538,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSetupHierarchiesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/setup/users': {
+      id: '/_authenticated/setup/users'
+      path: '/setup/users'
+      fullPath: '/setup/users'
+      preLoaderRoute: typeof AuthenticatedSetupUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedChangePasswordRoute: typeof AuthenticatedChangePasswordRoute
   AuthenticatedDataBrowserRoute: typeof AuthenticatedDataBrowserRoute
   AuthenticatedDataJournalsRoute: typeof AuthenticatedDataJournalsRoute
   AuthenticatedDataUploadRoute: typeof AuthenticatedDataUploadRoute
@@ -530,9 +570,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSetupDimensionsRoute: typeof AuthenticatedSetupDimensionsRoute
   AuthenticatedSetupFxRatesRoute: typeof AuthenticatedSetupFxRatesRoute
   AuthenticatedSetupHierarchiesRoute: typeof AuthenticatedSetupHierarchiesRoute
+  AuthenticatedSetupUsersRoute: typeof AuthenticatedSetupUsersRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedChangePasswordRoute: AuthenticatedChangePasswordRoute,
   AuthenticatedDataBrowserRoute: AuthenticatedDataBrowserRoute,
   AuthenticatedDataJournalsRoute: AuthenticatedDataJournalsRoute,
   AuthenticatedDataUploadRoute: AuthenticatedDataUploadRoute,
@@ -559,6 +601,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSetupDimensionsRoute: AuthenticatedSetupDimensionsRoute,
   AuthenticatedSetupFxRatesRoute: AuthenticatedSetupFxRatesRoute,
   AuthenticatedSetupHierarchiesRoute: AuthenticatedSetupHierarchiesRoute,
+  AuthenticatedSetupUsersRoute: AuthenticatedSetupUsersRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

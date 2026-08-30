@@ -46,36 +46,14 @@ function SignupPage() {
         return;
       }
 
-      // Invited users already have an app_user row created by their admin —
-      // they inherit that tenant instead of creating a new one.
-      const { data: invited } = await supabase
-        .from("app_user")
-        .select("id, tenant_id, role")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (invited) {
-        if (invited.id !== user.id) {
-          await supabase.from("app_user").update({ id: user.id }).eq("id", invited.id);
-        }
-        toast.success("Account activated");
-      } else {
-        const { data: tenant, error: tenantError } = await supabase
-          .from("tenant")
-          .insert({ name: tenantName || email })
-          .select("id")
-          .single();
-        if (tenantError) throw tenantError;
-
-        const { error: userError } = await supabase.from("app_user").insert({
-          id: user.id,
-          tenant_id: tenant.id,
-          email,
-          role: "admin",
-        });
-        if (userError) throw userError;
-        toast.success("Workspace created");
-      }
+      // The workspace is created by a SECURITY DEFINER function: the client no
+      // longer has write access to tenant or app_user, because holding it let
+      // any user move themselves into another tenant.
+      const { error: bootstrapError } = await supabase.rpc("bootstrap_workspace", {
+        p_tenant_name: tenantName || email,
+      });
+      if (bootstrapError) throw bootstrapError;
+      toast.success("Workspace created");
 
       if (data.session) {
         void navigate({ to: "/process/monitor" });

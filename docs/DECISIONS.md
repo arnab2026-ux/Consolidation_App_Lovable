@@ -396,3 +396,58 @@ out-of-transaction refresh (a scheduled job) would need it.
 `mv_cons_totals` is also stale by design between closes, so nothing that must be
 exact reads it: the trial balance, drill-through and audit trail all still go to
 `fact_balances`.
+
+---
+
+## D12 — The client does not write `app_user` or `tenant`
+
+**Date:** 2026-08-31 · **Status:** accepted
+
+Found while building user administration. `authenticated` held
+INSERT/UPDATE/DELETE on both tables, and the only policy was:
+
+```sql
+create policy own_user on app_user for all using (id = auth.uid())
+```
+
+with **no `WITH CHECK`**. For an UPDATE, Postgres falls back to `USING` for the
+check, so the new row is tested as "is this still my own id" — which it is. Any
+signed-up user could therefore run:
+
+```sql
+update app_user set tenant_id = '<another tenant>' where id = auth.uid();
+```
+
+and `current_tenant_id()` would hand them that tenant, which every RLS policy in
+the schema trusts. That is full cross-tenant read and write, reachable with the
+public anon key. The same route allowed `set role = 'admin'`.
+
+**Decision.** The fix is not a better policy — it is that the client does not
+write these tables at all. `INSERT/UPDATE/DELETE` are revoked from `anon` and
+`authenticated`; `SELECT` stays under RLS (own row, or the whole workspace for
+an admin). Every mutation goes through a `SECURITY DEFINER` function that
+decides what the caller may change and derives the tenant from the caller's own
+row rather than from the request:
+
+| Function | Who |
+|---|---|
+| `bootstrap_workspace` | a signed-in account with no workspace yet |
+| `admin_list_users`, `admin_update_user`, `admin_force_password_change` | admins, own workspace only |
+| `complete_password_change` | anyone, own row only |
+
+Signup used to insert `tenant` and `app_user` from the browser; it now calls
+`bootstrap_workspace`. The old "invited user" branch in signup was dead code
+regardless — it looked up an `app_user` row by email, which RLS had always
+hidden, so it never found one.
+
+Guardrails, all tested: the last active administrator cannot be demoted or
+deactivated, nobody can deactivate themselves, and a non-admin sees no users and
+can change nothing.
+
+**Account creation needs the service role key**, which must never reach the
+browser. It lives in the `admin-create-user` Edge Function, where Supabase
+injects it automatically — so it is not in Vercel's environment either. The
+function takes the tenant from the caller's own `app_user` row, so an
+administrator can only create users inside their own workspace, and deletes the
+auth account again if the profile insert fails rather than leaving someone able
+to sign in to nothing.

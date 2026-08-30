@@ -1,4 +1,11 @@
-import { Outlet, createFileRoute, redirect, useRouterState } from "@tanstack/react-router";
+import { useEffect } from "react";
+import {
+  Outlet,
+  createFileRoute,
+  redirect,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { PovSelector } from "@/components/pov-selector";
@@ -11,6 +18,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { findNavItem } from "@/lib/navigation";
 import { PovProvider } from "@/lib/pov-context";
@@ -28,6 +36,29 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const match = findNavItem(pathname);
+  const { appUser, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // An account created with an administrator-chosen password reaches nothing
+  // else until it has been replaced. The check lives here rather than in
+  // beforeLoad because the profile is loaded client-side after the session is.
+  const mustChange = !loading && appUser?.must_change_password === true;
+  const onChangePassword = pathname === "/change-password";
+
+  useEffect(() => {
+    if (mustChange && !onChangePassword) {
+      void navigate({ to: "/change-password", replace: true });
+    }
+  }, [mustChange, onChangePassword, navigate]);
+
+  // A deactivated account keeps a valid session until it expires, so it is
+  // turned away here too.
+  const deactivated = !loading && appUser?.is_active === false;
+  useEffect(() => {
+    if (deactivated) {
+      void supabase.auth.signOut();
+    }
+  }, [deactivated]);
 
   return (
     <PovProvider>

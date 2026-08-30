@@ -19,6 +19,7 @@ import {
   Table2,
   TrendingUp,
   Upload,
+  Users,
   Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -43,6 +44,7 @@ export const navGroups: NavGroup[] = [
       { title: "Hierarchies", to: "/setup/hierarchies", icon: ListTree },
       { title: "Consolidation Groups", to: "/setup/cons-groups", icon: Building2 },
       { title: "FX Rates", to: "/setup/fx-rates", icon: Coins },
+      { title: "Users", to: "/setup/users", icon: Users },
     ],
   },
   {
@@ -52,7 +54,11 @@ export const navGroups: NavGroup[] = [
       { title: "Net Income", to: "/rules/net-income", icon: TrendingUp },
       { title: "Currency Translation", to: "/rules/currency-translation", icon: GitCompareArrows },
       { title: "IC Elimination", to: "/rules/ic-elimination", icon: Network },
-      { title: "Consolidation of Investments", to: "/rules/consolidation-of-investments", icon: Scale },
+      {
+        title: "Consolidation of Investments",
+        to: "/rules/consolidation-of-investments",
+        icon: Scale,
+      },
     ],
   },
   {
@@ -75,7 +81,11 @@ export const navGroups: NavGroup[] = [
     label: "Reports",
     items: [
       { title: "Trial Balance", to: "/reports/trial-balance", icon: Table2 },
-      { title: "Consolidated Statements", to: "/reports/consolidated-statements", icon: FileSpreadsheet },
+      {
+        title: "Consolidated Statements",
+        to: "/reports/consolidated-statements",
+        icon: FileSpreadsheet,
+      },
       { title: "IC Reconciliation", to: "/reports/ic-reconciliation", icon: FileStack },
       { title: "Audit Trail", to: "/reports/audit-trail", icon: History },
     ],

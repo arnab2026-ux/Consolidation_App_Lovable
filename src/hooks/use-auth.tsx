@@ -8,6 +8,8 @@ export interface AppUser {
   tenant_id: string;
   email: string;
   role: string;
+  is_active: boolean;
+  must_change_password: boolean;
 }
 
 interface AuthContextValue {
@@ -24,7 +26,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 async function loadAppUser(user: User): Promise<AppUser | null> {
   const { data } = await supabase
     .from("app_user")
-    .select("id, tenant_id, email, role")
+    .select("id, tenant_id, email, role, is_active, must_change_password")
     .or(`id.eq.${user.id},email.eq.${user.email ?? ""}`)
     .limit(1)
     .maybeSingle();

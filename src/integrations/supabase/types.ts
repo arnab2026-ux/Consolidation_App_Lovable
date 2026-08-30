@@ -16,6 +16,9 @@ export type Database = {
           email: string
           role: string
           created_at: string | null
+          must_change_password: boolean
+          is_active: boolean
+          invited_by: string | null
         }
         Insert: {
           id: string
@@ -23,6 +26,9 @@ export type Database = {
           email: string
           role?: string
           created_at?: string | null
+          must_change_password?: boolean
+          is_active?: boolean
+          invited_by?: string | null
         }
         Update: {
           id?: string
@@ -30,6 +36,9 @@ export type Database = {
           email?: string
           role?: string
           created_at?: string | null
+          must_change_password?: boolean
+          is_active?: boolean
+          invited_by?: string | null
         }
         Relationships: []
       }
@@ -1541,6 +1550,33 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_force_password_change: {
+        Args: {
+          p_user: string
+        }
+        Returns: Json
+      }
+      admin_list_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+            id: string
+            email: string
+            role: string
+            is_active: boolean
+            must_change_password: boolean
+            created_at: string
+            invited_by_email: string
+            is_self: boolean
+          }[]
+      }
+      admin_update_user: {
+        Args: {
+          p_user: string
+          p_role?: string
+          p_is_active?: boolean
+        }
+        Returns: Json
+      }
       assert_period_open: {
         Args: {
           p_tenant: string
@@ -1550,6 +1586,12 @@ export type Database = {
           p_cons_group: string
         }
         Returns: undefined
+      }
+      bootstrap_workspace: {
+        Args: {
+          p_tenant_name?: string
+        }
+        Returns: Json
       }
       check_fx_coverage: {
         Args: {
@@ -1567,7 +1609,15 @@ export type Database = {
             is_present: boolean
           }[]
       }
+      complete_password_change: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       current_tenant_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
