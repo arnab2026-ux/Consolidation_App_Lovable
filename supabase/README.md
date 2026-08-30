@@ -20,6 +20,7 @@ Connection string → **Session pooler**. `.env.local` is gitignored.
 | `npm run db:apply -- supabase/migrations/<file>.sql` | Applies one migration in a transaction and records it in `supabase_migrations.schema_migrations`. Re-running is a no-op; `--force` re-applies. |
 | `npm run db:types` | Regenerates `src/integrations/supabase/types.ts` from the live database, including Views and Functions. |
 | `npm run db:dump -- <file>.sql` | Snapshots the whole `public` schema to a file. |
+| `npm run db:check` | Fails on any DELETE/UPDATE without a WHERE clause. See below. |
 
 These scripts talk to Postgres directly, so unlike the Supabase CLI they do **not**
 require Docker.
@@ -30,7 +31,7 @@ require Docker.
    edit a migration that has been applied — write a follow-up.
 2. **Run `npm run db:types` after every migration**, and commit the regenerated
    types with it. A schema change and its types belong in the same commit.
-3. **Then run `npm run typecheck`.** The types are the contract between the
+3. **Then run `npm run db:check` and `npm run typecheck`.** The types are the contract between the
    engines and the UI; if an RPC signature moved, this is where you find out.
 4. Migrations must be **idempotent where practical** (`if not exists`,
    `create or replace`) so a partial failure can be re-run.
@@ -113,3 +114,36 @@ mismatch between SUB_US and JV_SA, and a one-sided balance from SUB_EU.
 
 It is destructive by default (`p_reset = true` deletes the tenant's data first),
 so it is a development and demo tool, not something to point at real data.
+
+
+## Why `db:check` exists
+
+Supabase preloads `pg_safeupdate` for the **`authenticator`** role — the role
+PostgREST connects as — so every call through the API rejects a DELETE or UPDATE
+that has no WHERE clause, with:
+
+```
+DELETE requires a WHERE clause
+```
+
+That includes a temporary table the function created moments earlier.
+
+These scripts connect as the pooler superuser, which has no such preload and
+cannot load the library on demand (supautils restricts it). So this class of bug
+**runs clean from SQL and fails only in the running application**. Currency
+translation shipped with exactly one, clearing its temporary rate map with a bare
+`delete from _tr_map;`.
+
+`npm run db:check` scans every function for the pattern. Run it after every
+migration. Use `TRUNCATE` for temporary tables.
+
+Two other `authenticator` settings worth knowing, for the same reason — they do
+not apply to these scripts but do apply to the app:
+
+- `statement_timeout = 8s`
+- `lock_timeout = 8s`
+
+The close runs one task per request so each stays well inside that, but a much
+larger group could not. The non-concurrent `REFRESH MATERIALIZED VIEW` in the
+Group Reports step takes an exclusive lock, and currently completes in about
+15 ms.
