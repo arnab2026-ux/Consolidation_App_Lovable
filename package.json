@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "db:types": "node --env-file=.env.local scripts/gen-types.mjs src/integrations/supabase/types.ts",
     "db:apply": "node --env-file=.env.local scripts/db-apply.mjs",
-    "db:dump": "node --env-file=.env.local scripts/db-dump.mjs"
+    "db:dump": "node --env-file=.env.local scripts/db-dump.mjs",
+    "sample:tb": "node --env-file=.env.local scripts/gen-sample-tb.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

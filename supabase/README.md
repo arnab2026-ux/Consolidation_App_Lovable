@@ -91,6 +91,11 @@ require Docker.
   consolidated balance check goes group-wide.
 - `20260829002400_refresh_not_concurrent.sql` — concurrent refresh is not
   possible inside a transaction.
+- `20260829002500_template_reload_safe.sql` — "Load standard close" upserts its
+  steps, so it works more than once.
+- `20260829002600_task_run_journal_fk.sql` — `task_run.journal_id` and
+  `upload_batch.journal_id` cascade to null, so an engine can replace its own
+  document on a re-run.
 
 ## Demo dataset
 
