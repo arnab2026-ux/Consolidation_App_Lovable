@@ -21,6 +21,7 @@ Connection string → **Session pooler**. `.env.local` is gitignored.
 | `npm run db:types` | Regenerates `src/integrations/supabase/types.ts` from the live database, including Views and Functions. |
 | `npm run db:dump -- <file>.sql` | Snapshots the whole `public` schema to a file. |
 | `npm run db:check` | Fails on any DELETE/UPDATE without a WHERE clause. See below. |
+| `npm run db:smoke` | Calls every RPC the application calls. See below. |
 
 These scripts talk to Postgres directly, so unlike the Supabase CLI they do **not**
 require Docker.
@@ -31,7 +32,7 @@ require Docker.
    edit a migration that has been applied — write a follow-up.
 2. **Run `npm run db:types` after every migration**, and commit the regenerated
    types with it. A schema change and its types belong in the same commit.
-3. **Then run `npm run db:check` and `npm run typecheck`.** The types are the contract between the
+3. **Then run `npm run db:check`, `npm run db:smoke` and `npm run typecheck`.** The types are the contract between the
    engines and the UI; if an RPC signature moved, this is where you find out.
 4. Migrations must be **idempotent where practical** (`if not exists`,
    `create or replace`) so a partial failure can be re-run.
@@ -147,3 +148,27 @@ The close runs one task per request so each stays well inside that, but a much
 larger group could not. The non-concurrent `REFRESH MATERIALIZED VIEW` in the
 Group Reports step takes an exclusive lock, and currently completes in about
 15 ms.
+
+
+## Why `db:smoke` exists
+
+`column reference "task_run_id" is ambiguous` shipped in **all five** engine
+wrappers — including `run_bcf`, which had carried it since the original build.
+Each is declared `RETURNS TABLE (task_run_id uuid, ...)`, and in plpgsql an
+output column name is a variable in scope for the whole body, so this subquery
+
+```sql
+(select id from journal_header where task_run_id = v_task limit 1)
+```
+
+reads `task_run_id` as both the variable and the column.
+
+It went unnoticed for the whole build because every end-to-end test drove the
+**workers** (`run_bcf_entity`, `run_ic_elimination`, …) or `run_workflow_task`,
+which returns `jsonb` and has no such output columns. The Consolidation Monitor
+therefore worked perfectly while **every per-screen Run button was broken**.
+
+Nothing catches this before the function is executed — not a migration applying
+cleanly, not `db:check`, not the typechecker. `npm run db:smoke` calls each RPC
+the way the client calls it, inside a transaction it rolls back, so the same
+class of defect fails a check instead of a user.
