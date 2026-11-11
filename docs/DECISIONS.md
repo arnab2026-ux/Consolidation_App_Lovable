@@ -451,3 +451,95 @@ function takes the tenant from the caller's own `app_user` row, so an
 administrator can only create users inside their own workspace, and deletes the
 auth account again if the profile insert fails rather than leaving someone able
 to sign in to nothing.
+
+---
+
+## D13 — The database, not the screen, decides who may do what
+
+**Date:** 2026-11-11 · **Status:** accepted · **Extends:** D12 ·
+**Migration:** `20261111000100_security_hardening.sql`
+
+A code review found that D12 had closed one door and left the same kind open
+elsewhere. Every engine worker (`run_bcf_entity`, `run_coi_entity`, …) is
+`SECURITY DEFINER`, takes `p_tenant` as an argument and trusted it; nothing had
+revoked `EXECUTE`, so each was reachable as `/rpc/<name>` by anyone holding the
+publishable key. `seed_demo_dataset(p_tenant, …)` would wipe whichever tenant it
+was handed. Roles other than `admin` were enforced nowhere, and a deactivated
+account kept working until its session expired.
+
+**Decisions.**
+
+- **Workers are not API.** Anything that takes `p_tenant`, or exists only to be
+  called by another function, has `EXECUTE` revoked from `public`, `anon` and
+  `authenticated`. Only the wrappers, which derive the tenant from the caller,
+  are callable. `anon` can call nothing except the three identity helpers.
+- **Write access is a role, checked by trigger.** `admin`, `preparer` and
+  `reviewer` may write; `viewer` is read-only. One statement-level trigger
+  (`require_write_role`) on every tenant-scoped table enforces it, rather than
+  an edit to each engine: every engine, posting and reversal writes `task_run`,
+  `journal_header` or `fact_balances`, so it stops at its first write.
+  `auth.uid()` is still the end user inside a `SECURITY DEFINER` function, which
+  is what makes this work.
+- **The client does not write the posting tables.** `fact_balances`,
+  `journal_header`, `task_run`, `workflow_run`, `ic_reconciliation` and
+  `period_status` are written only by functions. That is what makes the period
+  lock real; `admin_set_period_status` is the deliberate way to reopen one.
+- **Inactive means no tenant.** `current_tenant_id()` returns NULL for an
+  inactive account or one that still owes a password change, so both flags are
+  enforced by every policy and wrapper instead of by a redirect.
+- **The author of a journal is `auth.uid()`**, never a field in the request.
+
+**Rules for later migrations.** Postgres grants `EXECUTE` on a new function to
+`PUBLIC`. A migration that adds a function must revoke it from `public, anon`
+(and from `authenticated` for a worker); one that adds a tenant-scoped table
+must add the `require_write_role` trigger alongside its `tenant_isolation`
+policy. Change the demo seed by replacing `seed_demo_dataset_impl(uuid,
+boolean)`, not by re-creating `seed_demo_dataset(uuid, boolean)`.
+
+---
+
+## D14 — Accounting corrections from the November 2026 review
+
+**Date:** 2026-11-11 · **Status:** accepted ·
+**Migration:** `20261111000200_accounting_fixes.sql`
+
+- **Goodwill is frozen from the latest register entry on or before the period**
+  (amends Prompt 15). Matching the period exactly applied the acquisition
+  figures for one period only; goodwill then drifted with each period's result.
+- **Full goodwill grosses up both sides.** The NCI's share of goodwill is added
+  to goodwill and to NCI. NCI is `share of current net assets + NCI goodwill`.
+- **Intercompany elimination reverses each account of a leg**, not one arbitrary
+  account chosen by `limit 1`. A pair whose difference has no account to go to
+  is reported as blocked, whatever its status, instead of failing the run.
+- **Carry forward does not repeat the prior-year result** (refines D3). When a
+  rule transfers the P&L to retained earnings, the net income step's own
+  transfer on the net-income line is left behind; anything else on that line —
+  the equity elimination consolidation of investments posts there — goes to
+  retained earnings with the P&L.
+- **A level-30 journal amount is a group-currency amount** (resolves the open
+  consequence of D1 for level 30). It is written to `amount_gc`; nothing
+  translates level 30, so it has to carry its own.
+- **A level-01 journal balances per entity**; a level-30 journal balances as a
+  whole.
+- **Reports scope to the consolidation group** (amends D5's reporting note).
+  No group selected: entity-level rows only. Group selected: that group's rows
+  plus entity-level rows of its members with a method other than `NONE`.
+
+Verified by running a whole close on a freshly seeded workspace inside a
+rolled-back transaction: 34 workflow steps with no error, the consolidated
+balance sheet footing to 0.00 and the consolidated result still 5,277,480 USD
+(D9).
+
+### Still open
+
+- **`investment_register.fair_value_adjustment_gc`** debits goodwill and, through
+  the plug, credits retained earnings. Not right under any reading; the correct
+  entry depends on what the field means. Leave it at zero until decided.
+- **Period 0 is written and never read.** Subsequent consolidation, disposals
+  and step acquisitions depend on designing that first.
+- **The seeded carry-forward rule carries only `CLOSING` movements**, so group
+  postings on other movement classes — the `FX_EFFECT` rows consolidation of
+  investments posts when it removes an investee's translation reserve — are not
+  carried. On the demo data the group opening entries are out by exactly that
+  312,800. Clear the rule's source movement classes, or add `FX_EFFECT`.
+- **`resolve_translation_rate` falls back from historical to closing silently.**

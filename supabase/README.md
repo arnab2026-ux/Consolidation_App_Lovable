@@ -98,13 +98,41 @@ require Docker.
 - `20260829002600_task_run_journal_fk.sql` — `task_run.journal_id` and
   `upload_batch.journal_id` cascade to null, so an engine can replace its own
   document on a re-run.
+- `20261111000100_security_hardening.sql` — decision D13. Workers and helpers
+  are no longer callable through the API, roles are enforced by the
+  `require_write_role` trigger, the posting tables are written only by
+  functions, inactive accounts lose their tenant, and the demo seed needs an
+  administrator. Adds `admin_set_period_status`.
+- `20261111000200_accounting_fixes.sql` — decision D14. Frozen and full
+  goodwill, per-account intercompany elimination, carry forward without the
+  double count, level-30 journals in group currency, and report scoping.
+
+## Rules for new functions and tables
+
+Postgres grants `EXECUTE` on every new function to `PUBLIC`, which includes
+`anon`. A migration that creates a function ends with
+
+```sql
+revoke execute on function <name>(<args>) from public, anon;
+```
+
+and adds `authenticated` to that list for a worker that takes `p_tenant` or is
+only ever called by another function. A new tenant-scoped table gets the
+`require_write_role` trigger as well as its `tenant_isolation` policy.
 
 ## Demo dataset
 
 ```sql
-select seed_demo_dataset();          -- current user's tenant, wipes and rebuilds
-select seed_demo_dataset(null, false); -- keep existing rows, top up master data
+select seed_demo_dataset();        -- signed-in administrator's own workspace, wipes and rebuilds
+select seed_demo_dataset(false);   -- keep existing rows, top up master data
+
+-- From a script, where there is no signed-in user:
+select seed_demo_dataset_impl('<tenant uuid>', true);
 ```
+
+`seed_demo_dataset` takes no tenant: it seeds the caller's own workspace and
+requires the `admin` role. The implementation that does take one is not callable
+through the API.
 
 Builds a five-entity group (USD/USD/EUR/SAR/INR) across all four consolidation
 methods, a 64-account chart, two years of trial balance, FX rates, an account
