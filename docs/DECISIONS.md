@@ -537,9 +537,13 @@ balance sheet footing to 0.00 and the consolidated result still 5,277,480 USD
   entry depends on what the field means. Leave it at zero until decided.
 - **Period 0 is written and never read.** Subsequent consolidation, disposals
   and step acquisitions depend on designing that first.
-- **The seeded carry-forward rule carries only `CLOSING` movements**, so group
-  postings on other movement classes — the `FX_EFFECT` rows consolidation of
-  investments posts when it removes an investee's translation reserve — are not
-  carried. On the demo data the group opening entries are out by exactly that
-  312,800. Clear the rule's source movement classes, or add `FX_EFFECT`.
 - **`resolve_translation_rate` falls back from historical to closing silently.**
+
+### Closed since
+
+- **The seeded carry-forward rule carried only `CLOSING` movements**, so the
+  `FX_EFFECT` rows consolidation of investments posts when it removes an
+  investee's translation reserve were not carried, and the group opening
+  entries were out by exactly that 312,800 on the demo data. The rule now
+  carries `FX_EFFECT` too (`20261112000100_bcf_rule_fx_effect.sql`). An opening
+  balance is the whole prior closing position, whichever movement built it up.

@@ -106,6 +106,8 @@ require Docker.
 - `20261111000200_accounting_fixes.sql` — decision D14. Frozen and full
   goodwill, per-account intercompany elimination, carry forward without the
   double count, level-30 journals in group currency, and report scoping.
+- `20261112000100_bcf_rule_fx_effect.sql` — the seeded carry-forward rule also
+  carries `FX_EFFECT` movements, so the group opening entries foot.
 
 ## Rules for new functions and tables
 
